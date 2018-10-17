@@ -1,0 +1,103 @@
+---
+title: "tfcb-homework2-analysis"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+# Access tidyverse library
+library(tidyverse)
+```
+
+
+```{r}
+# Load data file into tibble
+data <- read_tsv("../data/example_dataset_2.tsv") %>%
+  
+  # Add a column that provides mean ratio
+  mutate(mean_ratio = mean_yfp / mean_rfp) %>%
+
+  # Round the new column's value to the hundredths-place
+  mutate(mean_ratio = round(mean_ratio, 2)) %>%
+  
+  # Print modified table
+  print()
+```
+
+```{r}
+# Load annotations file into a tibble
+annotations <- read_tsv("../data/example_dataset_3.tsv") %>%
+  print()
+
+  
+```
+
+```{r}
+# Join 'data' and 'annotations' tables by their in-common 'strain' name
+data %>%
+  inner_join(annotations, by = "strain") %>%
+  print()
+```
+
+```{r}
+# Join 'data' and 'annotations' tables, keeping 'data' rows
+data %>%
+  left_join(annotations, by = "strain") %>%
+  print()
+```
+
+```{r}
+# Join 'data' and 'annotations' tables, keeping 'annotations' rows
+data %>%
+  right_join(annotations, by = "strain") %>%
+  print()
+```
+
+```{r}
+# Summarize yfp and rfp means across rows
+data %>% 
+  summarize(max_yfp = max(mean_yfp),
+            max_rfp = max(mean_rfp)) %>%
+  print()
+```
+
+```{r}
+# Load data file nito a tibble
+data_2 <- read_tsv("../data/example_dataset_4.tsv") %>%
+  print()
+```
+
+```{r}
+# Group rows by common 'strain' names
+data_2 %>%
+  group_by(strain) %>%
+  
+  # Summarize each group's mean fluorescence
+  summarize(mean_yfp = mean(yfp),
+            mean_rfp = mean(rfp),
+            
+            # Calculate esach group's standard error
+            se_yfp = sd(yfp) / sqrt(n()),
+            se_rfp = sd(rfp) / sqrt(n())) %>%
+  
+  # Add column for mean ratio of yfp to rfp
+  mutate(mean_ratio = mean_yfp / mean_rfp) %>%
+           
+  # Join annotations with modified dataset by common strain names
+  left_join(annotations, by = "strain") %>%
+  
+  # Make line/point plot of mean fluorescence ration vs kozak region
+  ggplot(aes(x = kozak_region, 
+            y = mean_ratio,
+            
+            # Rows with different insert sequences get different colors
+            color = insert_sequence,
+            group = insert_sequence)) +
+  geom_line() +
+  geom_point()
+```
+
